@@ -915,6 +915,8 @@ Box-Line "v2 NEW  Network code in hook / event classes" DarkGray
 Box-Line "        Zone.Identifier ADS = download source" DarkGray
 Box-Line "        Modrinth SHA1       = official mod hash" DarkGray
 Box-Line "        Feather Modrinth    = live org verification" DarkGray
+Box-Sep White
+Box-Line "MANUAL VERIFICATION IS ALWAYS RECOMMENDED" Red
 Box-Bot White
 Write-Host ""
 pause
