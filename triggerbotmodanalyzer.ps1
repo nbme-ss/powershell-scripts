@@ -20,7 +20,7 @@ Write-Host "   ██║╚████║██╔══██╗██║╚�
 Write-Host "   ██║ ╚███║██████╔╝██║ ╚═╝ ██║███████╗    ███████║███████║" -ForegroundColor Green
 Write-Host "   ╚═╝  ╚══╝╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝" -ForegroundColor Green
 Write-Host ""
-Write-Host "           mod scanner  |  v1.2  |  made by claude.ai" -ForegroundColor Green
+Write-Host "           mod scanner  |  v2.0  |  made by claude.ai" -ForegroundColor Green
 Write-Host ""
 
 # ── Feather Whitelist ───────────────────────────────────────────────
@@ -118,7 +118,9 @@ $ManifestAgentKeys = [ordered]@{
     "Can-Set-Native-Method-Prefix" = "Can hook native JVM methods"
 }
 
+# ── Merged Obfuscator Signatures ──────────────────────────────────
 $ObfuscatorSignatures = [ordered]@{
+    # Original signatures
     "allatori"          = "Allatori"
     "ZKM"               = "Zelix KlassMaster"
     "me/lpk/"           = "SkidFuscator (LPK)"
@@ -133,6 +135,31 @@ $ObfuscatorSignatures = [ordered]@{
     "de/xbrowniecodez"  = "Branchlock/XBrownie"
     "com/yworks/yguard" = "yGuard"
     "proguard"          = "ProGuard"
+    # MeowModAnalyzer additions
+    "dev/skidfuscator"  = "Skidfuscator"
+    "skidfuscator.dev"  = "Skidfuscator"
+    "Paramorphism"      = "Paramorphism"
+    "paramorphism-"     = "Paramorphism"
+    "ItzSomebody/Radon" = "Radon"
+    "sim0n/Caesium"     = "Caesium"
+    "vimasig/Bozar"     = "Bozar"
+    "branchlock.dev"    = "Branchlock"
+    "com/binscure"      = "Binscure"
+    "superblaubeere"    = "SuperBlaubeere"
+    "QProtect"          = "QProtect"
+    "mdma.dev/qprotect" = "QProtect"
+    "ZKMFLOW"           = "Zelix KlassMaster"
+    "ZelixKlassMaster"  = "Zelix KlassMaster"
+    "com/zelix"         = "Zelix KlassMaster"
+    "StringerJavaObfuscator" = "Stringer"
+    "com/licel/stringer"= "Stringer"
+    "JNIC"              = "JNIC"
+    "jnic.obf"          = "JNIC"
+    "jnic-obfuscator"   = "JNIC"
+    "ScutiObf"          = "Scuti"
+    "scuti.obf"         = "Scuti"
+    "SmokeObf"          = "Smoke"
+    "smoke.obf"         = "Smoke"
 }
 
 $LegitShortNames = [System.Collections.Generic.HashSet[string]]::new(
@@ -296,12 +323,24 @@ function Invoke-JarScan([string]$JarPath) {
         NetworkCode    = [System.Collections.Generic.List[PSCustomObject]]::new()
         JvmArgStrings  = [System.Collections.Generic.List[string]]::new()
         Obfuscation    = [PSCustomObject]@{
-            Grade        = "CLEAN"
-            Percent      = 0
-            KnownTools   = [System.Collections.Generic.List[string]]::new()
-            EntropyNote  = ""
-            ShortClasses = 0
-            TotalClasses = 0
+            Grade         = "CLEAN"
+            Percent       = 0
+            KnownTools    = [System.Collections.Generic.List[string]]::new()
+            Flags         = [System.Collections.Generic.List[string]]::new()
+            # ── MeowModAnalyzer-style counters ──
+            TotalClasses      = 0
+            NumericCount      = 0
+            UnicodeCount      = 0
+            FullwidthCount    = 0
+            JapaneseCount     = 0
+            SingleLetterCount = 0
+            TwoLetterCount    = 0
+            GibberishCount    = 0
+            NoVowelCount      = 0
+            ConfusionCount    = 0
+            SingleCharPkg     = 0
+            EntropyNote       = ""
+            ShortClasses      = 0
         }
     }
 
@@ -309,6 +348,10 @@ function Invoke-JarScan([string]$JarPath) {
     try {
         $stream  = [File]::OpenRead($JarPath)
         $archive = New-Object ZipArchive($stream, [ZipArchiveMode]::Read, $false)
+
+        # ── Build content sample for fullwidth / obfuscator string detection ──
+        $contentSample = [System.Text.StringBuilder]::new()
+        $sampleSize    = 0
 
         foreach ($entry in $archive.Entries) {
             if ($entry.FullName -notlike "*.class") { continue }
@@ -323,26 +366,71 @@ function Invoke-JarScan([string]$JarPath) {
             $entryShort = $entry.FullName
             $entryLower = $entryShort.ToLower()
 
-            # ── Obfuscation analysis ──
-            $result.Obfuscation.TotalClasses++
-            $nameParts  = ($entryShort -replace "\.class$","") -split "[/\\]"
-            $simpleName = $nameParts[-1]
-            $baseName   = $simpleName -replace '\$.*$',''
+            # ── Obfuscation analysis (MeowModAnalyzer style) ──
+            $obf = $result.Obfuscation
+            $obf.TotalClasses++
 
+            $className = [System.IO.Path]::GetFileNameWithoutExtension(($entryShort -split "[/\\]")[-1])
+
+            # Numeric-only class names
+            if ($className -match "^\d+$") { $obf.NumericCount++ }
+
+            # Unicode / non-ASCII
+            if ($className -match "[^\x00-\x7F]") { $obf.UnicodeCount++ }
+
+            # Fullwidth Unicode chars
+            if ($className -match "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]") { $obf.FullwidthCount++ }
+
+            # Japanese hiragana/katakana
+            if ($className -match "[\u3040-\u309F\u30A0-\u30FF]") { $obf.JapaneseCount++ }
+
+            # Single-letter class names
+            if ($className -match "^[a-zA-Z]$") { $obf.SingleLetterCount++ }
+
+            # Two-letter class names
+            if ($className -match "^[a-zA-Z]{2}$") { $obf.TwoLetterCount++ }
+
+            # Confusion characters (Il1O0 / underscore)
+            if ($className -match "^[Il1O0]+$" -or $className -match "^[_]+$") { $obf.ConfusionCount++ }
+
+            # Gibberish detection: no vowels + consonant clusters, low vowel ratio
+            if ($className.Length -ge 3 -and $className.Length -le 8 -and $className -match "^[a-zA-Z]+$") {
+                $vowels = ($className.ToCharArray() | Where-Object { $_ -match "[aeiouAEIOU]" }).Count
+                if ($vowels -eq 0) { $obf.NoVowelCount++ }
+                $hasCluster = $className -match "[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{3,}"
+                if ($hasCluster -and ($vowels / $className.Length) -lt 0.3) { $obf.GibberishCount++ }
+            }
+
+            # Single-char package path segments (a/b/c style)
+            $segs = ($entryShort -replace "\.class$", "") -split "[/\\]"
+            foreach ($seg in $segs[0..($segs.Count - 2)]) {
+                if ($seg.Length -eq 1) { $obf.SingleCharPkg++ }
+            }
+
+            # Legacy short-name check (original NomObfScanner logic)
+            $simpleName = $segs[-1]
+            $baseName   = $simpleName -replace '\$.*$',''
             if ($baseName.Length -le 2 -and $baseName.Length -ge 1 -and
                 $baseName -match "^[a-zA-Z]+$" -and
                 -not $LegitShortNames.Contains($baseName)) {
-                $result.Obfuscation.ShortClasses++
+                $obf.ShortClasses++
             }
 
+            # ── Known obfuscator signatures in strings ──
             $combinedCtx = ($entryLower + " " + ($strings -join " ")).ToLower()
             foreach ($sig in $ObfuscatorSignatures.Keys) {
                 if ($combinedCtx -match [regex]::Escape($sig.ToLower())) {
                     $tool = $ObfuscatorSignatures[$sig]
-                    if (-not $result.Obfuscation.KnownTools.Contains($tool)) {
-                        [void]$result.Obfuscation.KnownTools.Add($tool)
+                    if (-not $obf.KnownTools.Contains($tool)) {
+                        [void]$obf.KnownTools.Add($tool)
                     }
                 }
+            }
+
+            # ── Content sampling for fullwidth string / obfuscator detection ──
+            if ($sampleSize -lt 150000 -and $entry.Length -lt 100000 -and $entry.Length -gt 100) {
+                [void]$contentSample.Append([System.Text.Encoding]::ASCII.GetString($bytes))
+                $sampleSize += $bytes.Length
             }
 
             # ── JVM arg strings ──
@@ -404,8 +492,54 @@ function Invoke-JarScan([string]$JarPath) {
             }
         }
 
-        # ── Finalize obfuscation % ──
+        # ── Finalize obfuscation analysis ──
         $obf = $result.Obfuscation
+
+        if ($obf.TotalClasses -ge 5) {
+            $pct = { param($n) [math]::Round(($n / $obf.TotalClasses) * 100) }
+
+            $numPct  = & $pct $obf.NumericCount
+            $uniPct  = & $pct $obf.UnicodeCount
+            $fwPct   = & $pct $obf.FullwidthCount
+            $jpPct   = & $pct $obf.JapaneseCount
+            $s1Pct   = & $pct $obf.SingleLetterCount
+            $s2Pct   = & $pct $obf.TwoLetterCount
+            $gibPct  = & $pct $obf.GibberishCount
+            $novPct  = & $pct $obf.NoVowelCount
+            $confPct = & $pct $obf.ConfusionCount
+
+            # Build individual flags (MeowModAnalyzer thresholds)
+            if ($numPct  -ge 20) { $obf.Flags.Add("Numeric class names — $numPct% have numeric-only names ($($obf.NumericCount) classes)") }
+            if ($uniPct  -ge 10) { $obf.Flags.Add("Unicode class names — $uniPct% use non-ASCII characters ($($obf.UnicodeCount) classes)") }
+            if ($fwPct   -gt  0) { $obf.Flags.Add("Fullwidth Unicode class names — $fwPct% use fullwidth chars ($($obf.FullwidthCount) classes)") }
+            if ($jpPct   -gt  0) { $obf.Flags.Add("Japanese obfuscation — $jpPct% use hiragana/katakana ($($obf.JapaneseCount) classes)") }
+            if ($s1Pct   -ge 15) { $obf.Flags.Add("Single-letter class names — $s1Pct% ($($obf.SingleLetterCount) classes)") }
+            if ($s2Pct   -ge 20) { $obf.Flags.Add("Two-letter class names — $s2Pct% ($($obf.TwoLetterCount) classes)") }
+            if ($gibPct  -ge  5) { $obf.Flags.Add("Gibberish class names — $gibPct% no vowels + consonant clusters ($($obf.GibberishCount) classes)") }
+            if ($novPct  -ge  8) { $obf.Flags.Add("No-vowel class names — $novPct% ($($obf.NoVowelCount) classes)") }
+            if ($confPct -ge  3) { $obf.Flags.Add("Confusion-char names (Il1O0/_) — $confPct% ($($obf.ConfusionCount) classes)") }
+            if ($obf.SingleCharPkg -ge 6) { $obf.Flags.Add("Single-char package paths — $($obf.SingleCharPkg) segments like a/b/c") }
+
+            # Fullwidth strings in class content
+            $fwStringMatches = [regex]::Matches($contentSample.ToString(), "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}")
+            if ($fwStringMatches.Count -gt 0) {
+                $examples = ($fwStringMatches | Select-Object -First 3 | ForEach-Object { $_.Value }) -join ", "
+                $obf.Flags.Add("Fullwidth strings in bytecode — $($fwStringMatches.Count) occurrences (e.g. $examples)")
+            }
+
+            # Known obfuscator string signatures in content
+            $sampleStr = $contentSample.ToString()
+            foreach ($sig in $ObfuscatorSignatures.Keys) {
+                if ($sampleStr.Contains($sig)) {
+                    $tool = $ObfuscatorSignatures[$sig]
+                    if (-not $obf.KnownTools.Contains($tool)) {
+                        [void]$obf.KnownTools.Add($tool)
+                    }
+                }
+            }
+        }
+
+        # ── Composite grade calculation ──
         $ratio = if ($obf.TotalClasses -gt 0) { $obf.ShortClasses / $obf.TotalClasses } else { 0 }
 
         if ($obf.TotalClasses -gt 5 -and $ratio -gt 0.35) {
@@ -416,7 +550,10 @@ function Invoke-JarScan([string]$JarPath) {
         $toolPct = [math]::Min(35, $obf.KnownTools.Count * 17)
         $bonus   = if ($ratio -gt 0.70) { 10 } elseif ($ratio -gt 0.50) { 5 } else { 0 }
 
-        $obf.Percent = [math]::Min(100, $basePct + $toolPct + $bonus)
+        # Additional bonus from MeowModAnalyzer-style flags
+        $flagBonus = [math]::Min(25, $obf.Flags.Count * 5)
+
+        $obf.Percent = [math]::Min(100, $basePct + $toolPct + $bonus + $flagBonus)
 
         if      ($obf.Percent -ge 80) { $obf.Grade = "HEAVILY OBFUSCATED" }
         elseif  ($obf.Percent -ge 50) { $obf.Grade = "OBFUSCATED" }
@@ -947,7 +1084,7 @@ Write-Host "`r$(' ' * 90)`r   Replacement scan complete. $($replacementSuspects.
 Write-Host ""
 
 # ── Pass 3: Deep Scan ─────────────────────────────────────────────
-Write-Host "   Pass 3 — Deep scan: manifest, obfuscation %, cheat indicators..." -ForegroundColor Cyan
+Write-Host "   Pass 3 — Deep scan: manifest, obfuscation, cheat indicators..." -ForegroundColor Cyan
 $flagged      = [System.Collections.Generic.List[object]]::new()
 $unknownClean = [System.Collections.Generic.List[object]]::new()
 $idx = 0
@@ -968,7 +1105,7 @@ foreach ($entry in $unknown) {
              ($scan.NetworkCode.Count    -gt 0) -or
              ($scan.JvmArgStrings.Count  -gt 0) -or
              ($manifest.HasFindings)            -or
-             ($scan.Obfuscation.Percent -ge 50)
+             ($scan.Obfuscation.Grade -ne "CLEAN")
 
     if ($dirty) { [void]$flagged.Add([PSCustomObject]@{ Jar=$jar; Scan=$scan; Manifest=$manifest; SHA1=$entry.SHA1 }) }
     else        { [void]$unknownClean.Add($entry) }
@@ -1097,7 +1234,18 @@ else {
             $bar = ("█" * [math]::Round($pct / 10)) + ("░" * (10 - [math]::Round($pct / 10)))
             Box-Line "OBFUSCATION  [$bar]  $pct%  ($($obf.Grade))" Magenta
             if ($obf.EntropyNote) { Box-Line (Truncate "  Entropy : $($obf.EntropyNote)" $BoxW) DarkMagenta }
-            foreach ($tool in $obf.KnownTools) { Box-Line "  Tool sig: $tool" DarkMagenta }
+
+            # ── Individual obfuscation flags (MeowModAnalyzer style) ──
+            if ($obf.Flags.Count -gt 0) {
+                Box-Line "  Detection flags:" DarkMagenta
+                foreach ($flag in $obf.Flags) {
+                    Box-Line (Truncate "    ⚑ $flag" $BoxW) Yellow
+                }
+            }
+
+            if ($obf.KnownTools.Count -gt 0) {
+                Box-Line "  Tool signatures: $($obf.KnownTools -join ', ')" DarkMagenta
+            }
             Box-Sep Red
         }
 
