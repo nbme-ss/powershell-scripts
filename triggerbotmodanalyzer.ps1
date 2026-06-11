@@ -5,12 +5,12 @@ using namespace System.IO.Compression
 Add-Type -AssemblyName "System.IO.Compression"
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
-# ── Caches ──────────────────────────────────────────────────────────
+# -- Caches -----------------------------------------------------------
 $Script:CachedMcProcesses = $null
 $Script:AdminChecked      = $false
 $Script:IsAdmin           = $false
 
-# ── Banner ──────────────────────────────────────────────────────────
+# -- Banner -----------------------------------------------------------
 Clear-Host
 Write-Host ""
 Write-Host "   ███╗  ██╗ ██████╗ ███╗   ███╗███████╗    ███████╗███████╗" -ForegroundColor Green
@@ -20,10 +20,10 @@ Write-Host "   ██║╚████║██╔══██╗██║╚�
 Write-Host "   ██║ ╚███║██████╔╝██║ ╚═╝ ██║███████╗    ███████║███████║" -ForegroundColor Green
 Write-Host "   ╚═╝  ╚══╝╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝" -ForegroundColor Green
 Write-Host ""
-Write-Host "           mod scanner  |  v1.2  |  made by claude.ai" -ForegroundColor Green
+Write-Host "           mod scanner  |  v1.2.1 |  made by claude.ai" -ForegroundColor Green
 Write-Host ""
 
-# ── Feather Whitelist ───────────────────────────────────────────────
+# -- Feather Whitelist ------------------------------------------------
 $FeatherModrinthSlugs = @(
     "feathermc","featherapp","featherclient",
     "feather","feather-client","feather-mc"
@@ -69,7 +69,7 @@ function Test-FeatherOfficial([string]$ModId) {
     return (-not [string]::IsNullOrWhiteSpace($ModId)) -and $Script:FeatherIds.Contains($ModId)
 }
 
-# ── Indicators ────────────────────────────────────────────────────
+# -- Indicators -------------------------------------------------------
 $TriggerIndicators = @{
     "field_1692"    = "Crosshair target / aimed entity"
     "method_2918"   = "Attack entity"
@@ -118,7 +118,7 @@ $ManifestAgentKeys = [ordered]@{
     "Can-Set-Native-Method-Prefix" = "Can hook native JVM methods"
 }
 
-# ── Merged Obfuscator Signatures ──────────────────────────────────
+# -- Merged Obfuscator Signatures -------------------------------------
 $ObfuscatorSignatures = [ordered]@{
     "allatori"               = "Allatori"
     "ZKM"                    = "Zelix KlassMaster"
@@ -168,7 +168,7 @@ $LegitShortNames = [System.Collections.Generic.HashSet[string]]::new(
     [System.StringComparer]::OrdinalIgnoreCase
 )
 
-# ── Helpers ───────────────────────────────────────────────────────
+# -- Helpers ----------------------------------------------------------
 function Get-ClassStrings([byte[]]$Bytes) {
     $text = [System.Text.Encoding]::GetEncoding('iso-8859-1').GetString($Bytes)
     return [regex]::Matches($text, '[\x20-\x7e]{4,}') | ForEach-Object { $_.Value }
@@ -272,7 +272,7 @@ function Get-DownloadSource([string]$FilePath) {
     return $evidence
 }
 
-# ── Manifest Scan ───────────────────────────────────────────────────
+# -- Manifest Scan ----------------------------------------------------
 function Invoke-ManifestScan([string]$JarPath) {
     $result = [PSCustomObject]@{
         AgentEntries = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -312,7 +312,7 @@ function Invoke-ManifestScan([string]$JarPath) {
     return $result
 }
 
-# ── JAR Deep Scan ─────────────────────────────────────────────────
+# -- JAR Deep Scan ----------------------------------------------------
 function Invoke-JarScan([string]$JarPath) {
     $result = [PSCustomObject]@{
         Triggerbot     = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -480,21 +480,21 @@ function Invoke-JarScan([string]$JarPath) {
             $novPct  = & $pct $obf.NoVowelCount
             $confPct = & $pct $obf.ConfusionCount
 
-            if ($numPct  -ge 20) { $obf.Flags.Add("Numeric class names — $numPct% have numeric-only names ($($obf.NumericCount) classes)") }
-            if ($uniPct  -ge 10) { $obf.Flags.Add("Unicode class names — $uniPct% use non-ASCII characters ($($obf.UnicodeCount) classes)") }
-            if ($fwPct   -gt  0) { $obf.Flags.Add("Fullwidth Unicode class names — $fwPct% use fullwidth chars ($($obf.FullwidthCount) classes)") }
-            if ($jpPct   -gt  0) { $obf.Flags.Add("Japanese obfuscation — $jpPct% use hiragana/katakana ($($obf.JapaneseCount) classes)") }
-            if ($s1Pct   -ge 15) { $obf.Flags.Add("Single-letter class names — $s1Pct% ($($obf.SingleLetterCount) classes)") }
-            if ($s2Pct   -ge 20) { $obf.Flags.Add("Two-letter class names — $s2Pct% ($($obf.TwoLetterCount) classes)") }
-            if ($gibPct  -ge  5) { $obf.Flags.Add("Gibberish class names — $gibPct% no vowels + consonant clusters ($($obf.GibberishCount) classes)") }
-            if ($novPct  -ge  8) { $obf.Flags.Add("No-vowel class names — $novPct% ($($obf.NoVowelCount) classes)") }
-            if ($confPct -ge  3) { $obf.Flags.Add("Confusion-char names (Il1O0/_) — $confPct% ($($obf.ConfusionCount) classes)") }
-            if ($obf.SingleCharPkg -ge 6) { $obf.Flags.Add("Single-char package paths — $($obf.SingleCharPkg) segments like a/b/c") }
+            if ($numPct  -ge 20) { $obf.Flags.Add("Numeric class names -- $numPct% have numeric-only names ($($obf.NumericCount) classes)") }
+            if ($uniPct  -ge 10) { $obf.Flags.Add("Unicode class names -- $uniPct% use non-ASCII characters ($($obf.UnicodeCount) classes)") }
+            if ($fwPct   -gt  0) { $obf.Flags.Add("Fullwidth Unicode class names -- $fwPct% use fullwidth chars ($($obf.FullwidthCount) classes)") }
+            if ($jpPct   -gt  0) { $obf.Flags.Add("Japanese obfuscation -- $jpPct% use hiragana/katakana ($($obf.JapaneseCount) classes)") }
+            if ($s1Pct   -ge 15) { $obf.Flags.Add("Single-letter class names -- $s1Pct% ($($obf.SingleLetterCount) classes)") }
+            if ($s2Pct   -ge 20) { $obf.Flags.Add("Two-letter class names -- $s2Pct% ($($obf.TwoLetterCount) classes)") }
+            if ($gibPct  -ge  5) { $obf.Flags.Add("Gibberish class names -- $gibPct% no vowels + consonant clusters ($($obf.GibberishCount) classes)") }
+            if ($novPct  -ge  8) { $obf.Flags.Add("No-vowel class names -- $novPct% ($($obf.NoVowelCount) classes)") }
+            if ($confPct -ge  3) { $obf.Flags.Add("Confusion-char names (Il1O0/_) -- $confPct% ($($obf.ConfusionCount) classes)") }
+            if ($obf.SingleCharPkg -ge 6) { $obf.Flags.Add("Single-char package paths -- $($obf.SingleCharPkg) segments like a/b/c") }
 
             $fwStringMatches = [regex]::Matches($contentSample.ToString(), "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}")
             if ($fwStringMatches.Count -gt 0) {
                 $examples = ($fwStringMatches | Select-Object -First 3 | ForEach-Object { $_.Value }) -join ", "
-                $obf.Flags.Add("Fullwidth strings in bytecode — $($fwStringMatches.Count) occurrences (e.g. $examples)")
+                $obf.Flags.Add("Fullwidth strings in bytecode -- $($fwStringMatches.Count) occurrences (e.g. $examples)")
             }
 
             $sampleStr = $contentSample.ToString()
@@ -536,7 +536,7 @@ function Invoke-JarScan([string]$JarPath) {
     return $result
 }
 
-# ── Minecraft Process Detection ─────────────────────────────────────
+# -- Minecraft Process Detection --------------------------------------
 function Get-MinecraftJavaProcesses {
     if ($Script:CachedMcProcesses -ne $null) { return $Script:CachedMcProcesses }
 
@@ -687,10 +687,6 @@ function Get-MinecraftJavaProcesses {
 function Get-MinecraftLaunchTimeUtc {
     $procs = Get-MinecraftJavaProcesses
     if (-not $procs -or $procs.Count -eq 0) { return $null }
-
-    foreach ($p in $procs) {
-        Write-Host ("   [DEBUG] PID {0} ({1}) — confidence {2}% — {3} — {4} MB" -f $p.ProcessId, $p.Name, $p.Confidence, $p.LauncherHint, $p.WorkingSetMB) -ForegroundColor DarkGray
-    }
     return $procs[0].CreationDate.ToUniversalTime()
 }
 
@@ -701,11 +697,11 @@ function Test-IsAdmin {
     return $Script:IsAdmin
 }
 
-# ════════════════════════════════════════════════════════════════════
-# ══ USN JOURNAL PARSING ════════════════════════════════════════════
-# ════════════════════════════════════════════════════════════════════
+# ======================================================================
+# == USN JOURNAL PARSING ===============================================
+# ======================================================================
 
-# ── USN Reason Constants ────────────────────────────────────────────
+# -- USN Reason Constants ----------------------------------------------
 $USN_REASON_DATA_OVERWRITE        = [uint32]0x00000001
 $USN_REASON_DATA_EXTEND           = [uint32]0x00000002
 $USN_REASON_DATA_TRUNCATION       = [uint32]0x00000004
@@ -729,14 +725,19 @@ $USN_REASON_TRANSACTED_CHANGE     = [uint32]0x00400000
 $USN_REASON_INTEGRITY_CHANGE      = [uint32]0x00800000
 $USN_REASON_CLOSE = [uint32]0x80000000L
 
-# ── Helper: parse a hex reason string into uint32 safely ────────────
-# FIX: Convert.ToUInt32(str, 16) does NOT accept a "0x" prefix and
-#      silently throws, leaving $reasonVal = 0 and all bitmask checks
-#      false. This helper strips the prefix before conversion.
+# -- FIX #1: Safe hex string normalizer --------------------------------
+function Normalize-HexId([string]$Raw) {
+    if ([string]::IsNullOrWhiteSpace($Raw)) { return "" }
+    $s = $Raw.Trim().Trim('"').ToLower()
+    if ($s -match '^0[xX](.+)$') { $s = $Matches[1] }
+    $s = $s.TrimStart('0')
+    if ($s -eq "") { $s = "0" }
+    return $s
+}
+
 function ConvertFrom-HexReason([string]$Raw) {
     if ([string]::IsNullOrWhiteSpace($Raw)) { return [uint32]0 }
     $hex = $Raw.Trim()
-    # Strip 0x / 0X prefix
     if ($hex -match '^0[xX](.+)$') { $hex = $Matches[1] }
     try   { return [convert]::ToUInt32($hex, 16) }
     catch {
@@ -745,10 +746,6 @@ function ConvertFrom-HexReason([string]$Raw) {
     }
 }
 
-# ── Helper: decode human-readable "Reason" text into a bitmask ──────
-# FIX: When the numeric "Reason #" column is absent or zero we fall
-#      back to OR-ing bits from the text "Reason" column, e.g.
-#      "Data extend | Basic info change | Close"
 function ConvertFrom-ReasonText([string]$Text) {
     [uint32]$val = 0
     if ([string]::IsNullOrWhiteSpace($Text)) { return $val }
@@ -765,7 +762,6 @@ function ConvertFrom-ReasonText([string]$Text) {
     return $val
 }
 
-# ── Read fsutil USN journal output (handles OEM encoding correctly) ─
 function Get-UsnJournalRaw([string]$DriveRoot) {
     $tmp = Join-Path $env:TEMP ("usn_" + [guid]::NewGuid().ToString("N") + ".csv")
     try {
@@ -775,81 +771,40 @@ function Get-UsnJournalRaw([string]$DriveRoot) {
         $psi.UseShellExecute        = $false
         $psi.CreateNoWindow         = $true
         $psi.RedirectStandardOutput = $false
-        $psi.RedirectStandardError  = $false
+        $psi.RedirectStandardError   = $false
 
         $proc = [System.Diagnostics.Process]::Start($psi)
         $proc.WaitForExit()
 
-        if ($proc.ExitCode -ne 0) {
-            Write-Host "      [USN] fsutil exit code $($proc.ExitCode)" -ForegroundColor DarkYellow
+        if ($proc.ExitCode -ne 0 -or -not (Test-Path $tmp)) {
             return @()
         }
-        if (-not (Test-Path $tmp)) {
-            Write-Host "      [USN] Temp file not created" -ForegroundColor DarkYellow
-            return @()
-        }
+
         [byte[]]$bytes = [System.IO.File]::ReadAllBytes($tmp)
         $oemEncoding   = [Console]::OutputEncoding
         $text          = $oemEncoding.GetString($bytes)
-        $lines         = $text -split "`r?`n"
-        return $lines
+        return ($text -split "`r?`n")
     } catch {
-        Write-Host "      [USN] fsutil temp-file read failed: $_" -ForegroundColor DarkRed
         return @()
     } finally {
         if (Test-Path $tmp) { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }
     }
 }
 
-# ── Parse USN journal and filter for .jar files ─────────────────────
-function Get-UsnJournalData([string]$ModsPath) {
+function Get-UsnJournalData([string]$ModsPath, [System.Collections.Generic.HashSet[string]]$CurrentJarNames) {
     $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
-    if (-not (Test-IsAdmin)) {
-        Write-Host "      [USN] Not running as admin — skipping journal read" -ForegroundColor DarkYellow
-        return $entries
-    }
+    if (-not (Test-IsAdmin)) { return $entries }
 
     try {
-        if (-not (Test-Path $ModsPath)) {
-            Write-Host "      [USN] Mods path not found: $ModsPath" -ForegroundColor DarkYellow
-            return $entries
-        }
-        $root = ([Path]::GetPathRoot((Resolve-Path $ModsPath))).TrimEnd('\\')
-        if (-not $root) {
-            Write-Host "      [USN] Could not resolve drive root from $ModsPath" -ForegroundColor DarkYellow
-            return $entries
-        }
+        if (-not (Test-Path $ModsPath)) { return $entries }
 
-        Write-Host "      [USN] Reading journal for $root ..." -ForegroundColor DarkGray
-
-        # Diagnostic: check journal status
-        try {
-            $qjOutput = & cmd /c "fsutil usn queryjournal $root 2>&1"
-            $qjStr    = $qjOutput -join " "
-            if ($qjStr -match "Next Usn") {
-                Write-Host "      [USN] Journal active on $root" -ForegroundColor DarkGray
-            } else {
-                Write-Host "      [USN] queryjournal: $qjStr" -ForegroundColor DarkYellow
-            }
-        } catch {
-            Write-Host "      [USN] queryjournal failed: $_" -ForegroundColor DarkYellow
-        }
+        $resolved = Resolve-Path $ModsPath -ErrorAction Stop
+        $root = ([Path]::GetPathRoot($resolved.Path)).TrimEnd('\')
+        if (-not $root) { return $entries }
 
         $lines = Get-UsnJournalRaw -DriveRoot $root
+        if (-not $lines -or ($lines.Count -eq 1 -and [string]::IsNullOrWhiteSpace($lines[0]))) { return $entries }
 
-        if ($lines.Count -eq 0 -or ($lines.Count -eq 1 -and [string]::IsNullOrWhiteSpace($lines[0]))) {
-            Write-Host "      [USN] fsutil returned empty output — journal may be empty or disabled" -ForegroundColor DarkYellow
-            return $entries
-        }
-        Write-Host "      [USN] fsutil returned $($lines.Count) line(s)" -ForegroundColor DarkGray
-
-        for ($i = 0; $i -lt [Math]::Min($lines.Count, 15); $i++) {
-            $preview = $lines[$i]
-            if ($preview.Length -gt 140) { $preview = $preview.Substring(0, 140) + "..." }
-            Write-Host "      [USN] Line $i : [$preview]" -ForegroundColor DarkGray
-        }
-
-        # Find CSV header
         $headerIdx = -1
         for ($i = 0; $i -lt $lines.Count; $i++) {
             $line = $lines[$i]
@@ -858,68 +813,50 @@ function Get-UsnJournalData([string]$ModsPath) {
             $lowerLine = $line.ToLower()
             if ($lowerLine -match 'usn' -and $lowerLine -match 'file name' -and $lowerLine -match 'reason') {
                 $headerIdx = $i
-                Write-Host "      [USN] CSV header candidate at line $i : [$line]" -ForegroundColor DarkGray
                 break
             }
         }
+        if ($headerIdx -lt 0) { return $entries }
 
-        if ($headerIdx -lt 0) {
-            Write-Host "      [USN] Could not find CSV header in journal output" -ForegroundColor DarkYellow
-            return $entries
-        }
-
-        # Parse header — strip BOM if present
         $headerLine = $lines[$headerIdx]
         $headerLine = $headerLine -replace "^\xEF\xBB\xBF", ""
         $headerLine = $headerLine -replace "^\xFE\xFF", ""
         $headerLine = $headerLine -replace "^\xFF\xFE", ""
 
         $hdr = $headerLine -split ',' | ForEach-Object { $_.Trim().Trim('"').Trim() }
-        Write-Host "      [USN] Split headers ($($hdr.Count) parts): [$($hdr -join ' | ')]" -ForegroundColor DarkGray
 
-        # Locate columns
         $idxName      = -1
-        $idxReason    = -1   # text column  e.g. "Data extend | Close"
-        $idxReasonNum = -1   # hex column   e.g. 0x00000082
+        $idxReason    = -1
+        $idxReasonNum = -1
         $idxTime      = -1
         $idxFileID    = -1
         $idxParentID  = -1
 
         for ($h = 0; $h -lt $hdr.Count; $h++) {
             $col = $hdr[$h].ToLower().Trim()
-            if ($col -eq 'filename'    -or $col -eq 'file name')         { $idxName      = $h }
-            if ($col -eq 'reason')                                        { $idxReason    = $h }
-            if ($col -eq 'reason #'    -or $col -eq 'reason#')           { $idxReasonNum = $h }
-            if ($col -eq 'timestamp'   -or $col -eq 'time stamp')        { $idxTime      = $h }
-            if ($col -eq 'fileid'      -or $col -eq 'file id')           { $idxFileID    = $h }
-            if ($col -eq 'parentfileid'-or $col -eq 'parent file id')    { $idxParentID  = $h }
+            if ($col -eq 'filename'     -or $col -eq 'file name')      { $idxName      = $h }
+            if ($col -eq 'reason')                                      { $idxReason    = $h }
+            if ($col -eq 'reason #'     -or $col -eq 'reason#')        { $idxReasonNum = $h }
+            if ($col -eq 'timestamp'    -or $col -eq 'time stamp')     { $idxTime      = $h }
+            if ($col -eq 'fileid'       -or $col -eq 'file id')        { $idxFileID    = $h }
+            if ($col -eq 'parentfileid' -or $col -eq 'parent file id') { $idxParentID  = $h }
         }
 
-        Write-Host "      [USN] Columns — Name=$idxName Reason(text)=$idxReason Reason#(hex)=$idxReasonNum Time=$idxTime FileID=$idxFileID ParentFileID=$idxParentID" -ForegroundColor DarkGray
+        if ($idxName -lt 0 -or ($idxReason -lt 0 -and $idxReasonNum -lt 0)) { return $entries }
 
-        if ($idxName -lt 0) {
-            Write-Host "      [USN] Required column (FileName) missing — cannot parse" -ForegroundColor DarkYellow
-            return $entries
-        }
-        if ($idxReason -lt 0 -and $idxReasonNum -lt 0) {
-            Write-Host "      [USN] Neither Reason nor Reason# column found — cannot parse" -ForegroundColor DarkYellow
-            return $entries
-        }
-
-        # Get mods folder FileID for parent-based filtering
         $folderRef = $null
         try {
             $batFile = Join-Path $env:TEMP ("qfi_" + [guid]::NewGuid().ToString("N") + ".bat")
             '@echo off' | Out-File -FilePath $batFile -Encoding ASCII
             ('fsutil file queryfileid "' + $ModsPath + '"') | Out-File -FilePath $batFile -Append -Encoding ASCII
 
-            $psi                    = New-Object System.Diagnostics.ProcessStartInfo
-            $psi.FileName           = "cmd.exe"
-            $psi.Arguments          = '/c "' + $batFile + '"'
-            $psi.UseShellExecute    = $false
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName               = "cmd.exe"
+            $psi.Arguments              = '/c "' + $batFile + '"'
+            $psi.UseShellExecute        = $false
             $psi.RedirectStandardOutput = $true
             $psi.RedirectStandardError  = $true
-            $psi.CreateNoWindow     = $true
+            $psi.CreateNoWindow         = $true
             $proc  = [System.Diagnostics.Process]::Start($psi)
             $q     = $proc.StandardOutput.ReadToEnd()
             $errTx = $proc.StandardError.ReadToEnd()
@@ -927,30 +864,16 @@ function Get-UsnJournalData([string]$ModsPath) {
             Remove-Item $batFile -Force -ErrorAction SilentlyContinue
 
             $q = $q.Trim()
-            Write-Host "      [USN] queryfileid raw: [$q]" -ForegroundColor DarkGray
-            if ($errTx) { Write-Host "      [USN] queryfileid stderr: [$errTx]" -ForegroundColor DarkGray }
             if ($q -match '0x([0-9a-fA-F]+)') {
-                $folderRef = $Matches[1].ToLower().TrimStart('0')
-                Write-Host "      [USN] Mods folder FileID: [$folderRef]" -ForegroundColor DarkGray
-            } else {
-                Write-Host "      [USN] Could not parse folder FileID — will scan all .jar entries" -ForegroundColor DarkYellow
+                $folderRef = Normalize-HexId $Matches[1]
             }
-        } catch {
-            Write-Host "      [USN] queryfileid failed: $_ — will scan all .jar entries" -ForegroundColor DarkYellow
-        }
-
-        $parsed     = 0
-        $jarHits    = 0
-        $folderHits = 0
+        } catch {}
 
         for ($i = $headerIdx + 1; $i -lt $lines.Count; $i++) {
             $line = $lines[$i]
             if ([string]::IsNullOrWhiteSpace($line)) { continue }
             if ($line -match '\s*:\s*' -and $line -notmatch ',') { continue }
 
-            $parsed++
-
-            # CSV-aware split (handles quoted fields)
             $parts    = [System.Collections.Generic.List[string]]::new()
             $current  = ""
             $inQuotes = $false
@@ -965,13 +888,7 @@ function Get-UsnJournalData([string]$ModsPath) {
             if ($parts.Count -le $idxName) { continue }
             $filename = $parts[$idxName].Trim('"')
             if ($filename -notlike "*.jar") { continue }
-            $jarHits++
 
-            # ── FIX: Reason value resolution ────────────────────────
-            # Priority: hex column ("Reason #") → text column ("Reason")
-            # The old code passed "0x00008000" directly to ToUInt32(...,16)
-            # which threw because the 0x prefix is not legal in that overload.
-            # ConvertFrom-HexReason strips the prefix first.
             [uint32]$reasonVal = 0
             $reasonHex         = ""
             $reasonText        = ""
@@ -986,11 +903,9 @@ function Get-UsnJournalData([string]$ModsPath) {
                 $reasonText = $parts[$idxReason].Trim('"')
             }
 
-            # Text fallback: if hex gave us nothing, decode the text column
             if ($reasonVal -eq 0 -and -not [string]::IsNullOrWhiteSpace($reasonText)) {
                 $reasonVal = ConvertFrom-ReasonText $reasonText
             }
-            # ────────────────────────────────────────────────────────
 
             $timestampStr = ""
             if ($idxTime -ge 0 -and $parts.Count -gt $idxTime) {
@@ -999,18 +914,19 @@ function Get-UsnJournalData([string]$ModsPath) {
 
             $fileID = $null
             if ($idxFileID -ge 0 -and $parts.Count -gt $idxFileID) {
-                $fileID = $parts[$idxFileID].Trim('"').ToLower().TrimStart('0').Replace("0x","")
+                $fileID = Normalize-HexId $parts[$idxFileID]
             }
 
             $parentFileID = $null
             if ($idxParentID -ge 0 -and $parts.Count -gt $idxParentID) {
-                $parentFileID = $parts[$idxParentID].Trim('"').ToLower().TrimStart('0').Replace("0x","")
+                $parentFileID = Normalize-HexId $parts[$idxParentID]
             }
 
-            if ($folderRef -and $parentFileID) {
-                if ($parentFileID -ne $folderRef) { continue }
-                $folderHits++
-            }
+            $parentMatch = $false
+            $nameMatch   = $false
+            if ($folderRef -and $parentFileID -and $parentFileID -eq $folderRef) { $parentMatch = $true }
+            if ($CurrentJarNames -and $CurrentJarNames.Count -gt 0 -and $CurrentJarNames.Contains($filename)) { $nameMatch = $true }
+            if ($folderRef -and -not $parentMatch -and -not $nameMatch) { continue }
 
             $timestamp = [datetime]::MinValue
             if (-not [string]::IsNullOrWhiteSpace($timestampStr)) {
@@ -1024,66 +940,58 @@ function Get-UsnJournalData([string]$ModsPath) {
             }
 
             [void]$entries.Add([PSCustomObject]@{
-                FileName     = $filename
-                ReasonHex    = $reasonHex
-                ReasonValue  = $reasonVal
-                ReasonText   = $reasonText
-                TimeStamp    = $timestamp
-                FileID       = $fileID
-                ParentFileID = $parentFileID
+                FileName        = $filename
+                ReasonHex       = $reasonHex
+                ReasonValue     = $reasonVal
+                ReasonText      = $reasonText
+                TimeStamp       = $timestamp
+                FileID          = $fileID
+                ParentFileID    = $parentFileID
+                MatchedByParent = $parentMatch
+                MatchedByName   = $nameMatch
             })
         }
-
-        Write-Host "      [USN] Parsed $parsed data rows, $jarHits .jar hits, $folderHits in target folder, $($entries.Count) kept" -ForegroundColor DarkGray
-    } catch {
-        Write-Host "      [!] USN journal read failed: $_" -ForegroundColor DarkRed
-    }
+    } catch {}
 
     return $entries
 }
 
-# ── Analyze USN entries for replacement patterns ────────────────────
-function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$MinecraftLaunchUtc) {
+function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$MinecraftLaunchUtc, [System.Collections.Generic.HashSet[string]]$CurrentJarNames) {
     $evidence   = @{}
-    $allEntries = Get-UsnJournalData -ModsPath $ModsPath
+    $allEntries = Get-UsnJournalData -ModsPath $ModsPath -CurrentJarNames $CurrentJarNames
+    if ($allEntries.Count -eq 0) { return $evidence }
 
-    if ($allEntries.Count -eq 0) {
-        Write-Host "      [USN] No journal entries for .jar files in mods folder — will use filesystem timestamps as backup" -ForegroundColor DarkYellow
-        return $evidence
-    }
-
-    Write-Host "      [USN] Analyzing $($allEntries.Count) entries for replacement patterns..." -ForegroundColor DarkGray
     $grouped = $allEntries | Group-Object -Property FileName
 
     foreach ($g in $grouped) {
         $name    = $g.Name
         $sorted  = $g.Group | Sort-Object TimeStamp
 
-        $hasDelete         = $false
-        $hasCreate         = $false
-        $hasOverwrite      = $false
-        $hasDataExtend     = $false
-        $hasDataTruncation = $false
-        $hasBasicInfoChange= $false
-        $hasRenameOld      = $false
-        $hasRenameNew      = $false
-        $hasClose          = $false
-        $deleteTime        = $null
-        $createTime        = $null
-        $overwriteTime     = $null
-        $extendTime        = $null
-        $truncationTime    = $null
-        $basicInfoTime     = $null
-        $lastActivity      = $null
+        $hasDelete          = $false
+        $hasCreate          = $false
+        $hasOverwrite       = $false
+        $hasDataExtend      = $false
+        $hasDataTruncation  = $false
+        $hasBasicInfoChange = $false
+        $hasRenameOld       = $false
+        $hasRenameNew       = $false
+        $hasClose           = $false
+        $deleteTime         = $null
+        $createTime         = $null
+        $overwriteTime      = $null
+        $extendTime         = $null
+        $truncationTime     = $null
+        $basicInfoTime      = $null
+        $lastActivity       = $null
 
         foreach ($entry in $sorted) {
             $r = $entry.ReasonValue
-            if ($r -band $USN_REASON_FILE_DELETE)       { $hasDelete          = $true; $deleteTime      = $entry.TimeStamp }
-            if ($r -band $USN_REASON_FILE_CREATE)       { $hasCreate          = $true; $createTime      = $entry.TimeStamp }
-            if ($r -band $USN_REASON_DATA_OVERWRITE)    { $hasOverwrite       = $true; $overwriteTime   = $entry.TimeStamp }
-            if ($r -band $USN_REASON_DATA_EXTEND)       { $hasDataExtend      = $true; $extendTime      = $entry.TimeStamp }
-            if ($r -band $USN_REASON_DATA_TRUNCATION)   { $hasDataTruncation  = $true; $truncationTime  = $entry.TimeStamp }
-            if ($r -band $USN_REASON_BASIC_INFO_CHANGE) { $hasBasicInfoChange = $true; $basicInfoTime   = $entry.TimeStamp }
+            if ($r -band $USN_REASON_FILE_DELETE)       { $hasDelete          = $true; $deleteTime     = $entry.TimeStamp }
+            if ($r -band $USN_REASON_FILE_CREATE)       { $hasCreate          = $true; $createTime     = $entry.TimeStamp }
+            if ($r -band $USN_REASON_DATA_OVERWRITE)    { $hasOverwrite       = $true; $overwriteTime  = $entry.TimeStamp }
+            if ($r -band $USN_REASON_DATA_EXTEND)       { $hasDataExtend      = $true; $extendTime     = $entry.TimeStamp }
+            if ($r -band $USN_REASON_DATA_TRUNCATION)   { $hasDataTruncation  = $true; $truncationTime = $entry.TimeStamp }
+            if ($r -band $USN_REASON_BASIC_INFO_CHANGE) { $hasBasicInfoChange = $true; $basicInfoTime  = $entry.TimeStamp }
             if ($r -band $USN_REASON_RENAME_OLD_NAME)   { $hasRenameOld       = $true }
             if ($r -band $USN_REASON_RENAME_NEW_NAME)   { $hasRenameNew       = $true }
             if ($r -band $USN_REASON_CLOSE)             { $hasClose           = $true }
@@ -1093,7 +1001,6 @@ function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$Mine
         $flags = [System.Collections.Generic.List[string]]::new()
         $score = 0
 
-        # Pattern 1: Deleted then recreated (classic replacement)
         if ($hasDelete -and $hasCreate) {
             $score += 3
             [void]$flags.Add("FILE DELETED then RECREATED")
@@ -1102,7 +1009,6 @@ function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$Mine
             }
         }
 
-        # Pattern 2: Data extend/truncation after creation (file content changed)
         if ($hasCreate -and ($hasDataExtend -or $hasDataTruncation)) {
             $score += 2
             [void]$flags.Add("FILE CONTENT CHANGED after creation (extend/truncation)")
@@ -1110,75 +1016,84 @@ function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$Mine
             if ($truncationTime) { [void]$flags.Add("Truncated : $($truncationTime.ToString('MM/dd HH:mm:ss'))") }
         }
 
-        # ── FIX: Pattern 2b ─────────────────────────────────────────
-        # Data extend/truncation + basic info change together = the
-        # canonical Windows file-replace fingerprint. Score +3 so this
-        # combination alone crosses the Suspected threshold (>= 3).
-        # Previously this combo only scored +1+1 = 2 and was silently
-        # dropped.
         if (($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) {
             $score += 3
             if ($hasDataExtend -and $hasDataTruncation) {
-                [void]$flags.Add("FILE REWRITTEN — data extended AND truncated + basic info changed")
+                [void]$flags.Add("FILE REWRITTEN -- data extended AND truncated + basic info changed")
             } elseif ($hasDataExtend) {
-                [void]$flags.Add("FILE GROWN — data extended + basic info changed (content added / replaced)")
+                [void]$flags.Add("FILE GROWN -- data extended + basic info changed (content added / replaced)")
             } else {
-                [void]$flags.Add("FILE SHRUNK — data truncated + basic info changed (content stripped / replaced)")
+                [void]$flags.Add("FILE SHRUNK -- data truncated + basic info changed (content stripped / replaced)")
             }
             if ($extendTime)     { [void]$flags.Add("Extended  : $($extendTime.ToString('MM/dd HH:mm:ss'))") }
             if ($truncationTime) { [void]$flags.Add("Truncated : $($truncationTime.ToString('MM/dd HH:mm:ss'))") }
             if ($basicInfoTime)  { [void]$flags.Add("BasicInfo : $($basicInfoTime.ToString('MM/dd HH:mm:ss'))") }
         }
-        # ─────────────────────────────────────────────────────────────
 
-        # Pattern 3: Overwritten in place
+        if ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) {
+            $score += 4
+            [void]$flags.Add("IN-PLACE REWRITE -- overwrite + data changed + basic info updated (strong replacement signal)")
+            if ($overwriteTime)  { [void]$flags.Add("Overwritten: $($overwriteTime.ToString('MM/dd HH:mm:ss'))") }
+            if ($extendTime)     { [void]$flags.Add("Extended   : $($extendTime.ToString('MM/dd HH:mm:ss'))") }
+            if ($truncationTime) { [void]$flags.Add("Truncated  : $($truncationTime.ToString('MM/dd HH:mm:ss'))") }
+            if ($basicInfoTime)  { [void]$flags.Add("BasicInfo  : $($basicInfoTime.ToString('MM/dd HH:mm:ss'))") }
+        }
+
         if ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasClose) {
-            $score += 2
-            [void]$flags.Add("FILE OVERWRITTEN in-place")
-            if ($overwriteTime) { [void]$flags.Add("Overwritten: $($overwriteTime.ToString('MM/dd HH:mm:ss'))") }
+            if (-not ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange)) {
+                $score += 2
+                [void]$flags.Add("FILE OVERWRITTEN in-place")
+                if ($overwriteTime) { [void]$flags.Add("Overwritten: $($overwriteTime.ToString('MM/dd HH:mm:ss'))") }
+            }
         }
 
-        # Pattern 4: Basic info change alone (size/attributes modified)
         if ($hasBasicInfoChange) {
-            $score += 1
-            [void]$flags.Add("BASIC INFO CHANGED (size/attributes modified)")
-            if ($basicInfoTime) { [void]$flags.Add("BasicInfoChange: $($basicInfoTime.ToString('MM/dd HH:mm:ss'))") }
+            if (-not (($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) -and
+                -not ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange)) {
+                $score += 1
+                [void]$flags.Add("BASIC INFO CHANGED (size/attributes modified)")
+                if ($basicInfoTime) { [void]$flags.Add("BasicInfoChange: $($basicInfoTime.ToString('MM/dd HH:mm:ss'))") }
+            }
         }
 
-        # Pattern 5: Renamed from another name
         if ($hasRenameNew) {
             $score += 2
             [void]$flags.Add("FILE RENAMED from another name (possible download -> mod rename)")
         }
 
-        # Pattern 6: Created after Minecraft launch
         if ($hasCreate -and $MinecraftLaunchUtc -ne $null -and $createTime -gt $MinecraftLaunchUtc) {
             $score += 1
             [void]$flags.Add("Created AFTER Minecraft launch at $($createTime.ToString('MM/dd HH:mm:ss'))")
         }
 
-        # Pattern 7: Deleted and not recreated
         if ($hasDelete -and -not $hasCreate) {
             $score += 1
             [void]$flags.Add("FILE DELETED and not recreated at $($deleteTime.ToString('MM/dd HH:mm:ss'))")
         }
 
-        # Pattern 8: New file dropped in (no prior delete)
         if ($hasCreate -and -not $hasDelete) {
-            $score += 1
-            [void]$flags.Add("NEW FILE created at $($createTime.ToString('MM/dd HH:mm:ss'))")
+            if (-not ($hasCreate -and ($hasDataExtend -or $hasDataTruncation))) {
+                $score += 1
+                [void]$flags.Add("NEW FILE created at $($createTime.ToString('MM/dd HH:mm:ss'))")
+            }
         }
 
-        # Pattern 9: Data extend
         if ($hasDataExtend) {
-            $score += 1
-            [void]$flags.Add("DATA EXTENDED (new content appended)")
+            if (-not (($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) -and
+                -not ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) -and
+                -not ($hasCreate -and $hasDataExtend)) {
+                $score += 1
+                [void]$flags.Add("DATA EXTENDED (new content appended)")
+            }
         }
 
-        # Pattern 10: Data truncation
         if ($hasDataTruncation) {
-            $score += 1
-            [void]$flags.Add("DATA TRUNCATED (file shortened)")
+            if (-not (($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) -and
+                -not ($hasOverwrite -and ($hasDataExtend -or $hasDataTruncation) -and $hasBasicInfoChange) -and
+                -not ($hasCreate -and $hasDataTruncation)) {
+                $score += 1
+                [void]$flags.Add("DATA TRUNCATED (file shortened)")
+            }
         }
 
         if ($score -gt 0) {
@@ -1191,7 +1106,6 @@ function Get-UsnReplacementEvidence([string]$ModsPath, [nullable[datetime]]$Mine
         }
     }
 
-    Write-Host "      [USN] Found $($evidence.Count) file(s) with replacement activity" -ForegroundColor DarkGray
     return $evidence
 }
 
@@ -1221,7 +1135,7 @@ function Get-UsnMissingMods([string]$ModsPath, [hashtable]$UsnEvidence, [System.
     return @($result)
 }
 
-# ════════════════════════════════════════════════════════════════════
+# ======================================================================
 
 function Get-ModNameAndClassRoots([string]$JarPath) {
     $roots   = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -1267,7 +1181,10 @@ function Get-ModReplacementAudit {
     param(
         [Parameter(Mandatory)][string]$JarPath,
         [nullable[datetime]]$MinecraftLaunchUtc = $null,
-        [hashtable]$UsnEvidence                 = $null
+        [hashtable]$UsnEvidence                 = $null,
+        [System.IO.FileInfo]$JarInfo             = $null,
+        [string]$PrecomputedSha1                = $null,
+        [string]$PrecomputedModId              = $null
     )
 
     $reasons  = [System.Collections.Generic.List[string]]::new()
@@ -1278,19 +1195,24 @@ function Get-ModReplacementAudit {
         return [pscustomobject]@{
             Path=$JarPath; Exists=$false; Suspected=$true; Score=999
             Reasons=@($reasons); Evidence=@($evidence); SHA1=$null
-            ModId=$null; Version=$null; Name=$null; LastWriteUtc=$null; CreationTimeUtc=$null; Size=$null; UsnFound=$false
+            ModId=$null; Version=$null; Name=$null; LastWriteUtc=$null; CreationTimeUtc=$null; Size=$null; UsnFound=$false; UsnScore=0
         }
     }
 
-    $item     = Get-Item $JarPath -ErrorAction Stop
-    $sha1     = Get-FileSHA1 $JarPath
-    $info     = Get-ModNameAndClassRoots $JarPath
-    $modId    = Get-ModId $JarPath
-    if (-not $modId) { $modId = $info.ModId }
+    $item = if ($JarInfo) { $JarInfo } else { Get-Item $JarPath -ErrorAction Stop }
+    $sha1 = if ($PrecomputedSha1) { $PrecomputedSha1 } else { Get-FileSHA1 $JarPath }
+
+    $modId = $PrecomputedModId
+    $info  = $null
+    if (-not $modId) {
+        $info  = Get-ModNameAndClassRoots $JarPath
+        $modId = $info.ModId
+    }
+
     $score    = 0
     $leafName = [Path]::GetFileName($JarPath)
+    $usnScore = 0
 
-    # ── Filesystem timestamp fallback ─────────────────────────────
     $lw = $item.LastWriteTimeUtc
     $ct = $item.CreationTimeUtc
     if ($MinecraftLaunchUtc -ne $null) {
@@ -1307,15 +1229,15 @@ function Get-ModReplacementAudit {
         }
         if ($ct -gt $MinecraftLaunchUtc -and [math]::Abs(($ct - $lw).TotalSeconds) -lt 5) {
             $score += 1
-            [void]$reasons.Add("[BACKUP] Brand-new file dropped in after launch (CreationTime ≈ LastWriteTime)")
+            [void]$reasons.Add("[BACKUP] Brand-new file dropped in after launch (CreationTime ~ LastWriteTime)")
         }
     }
 
-    # ── USN journal evidence ──────────────────────────────────────
     $usnFound = $false
     if ($UsnEvidence -and $UsnEvidence.ContainsKey($leafName)) {
         $usnFound  = $true
         $usn       = $UsnEvidence[$leafName]
+        $usnScore  = $usn.Score
         $score    += $usn.Score
         foreach ($flag in $usn.Flags) { [void]$reasons.Add("[USN] $flag") }
         [void]$evidence.Add("[USN] $($usn.EntryCount) journal entries")
@@ -1325,18 +1247,23 @@ function Get-ModReplacementAudit {
     }
 
     if (-not (Test-IsAdmin)) {
-        [void]$evidence.Add("[USN] Admin required for journal access — using filesystem timestamps as backup")
+        [void]$evidence.Add("[USN] Admin required for journal access -- using filesystem timestamps as backup")
+    }
+
+    if (-not $info -and ($score -gt 0 -or -not $modId)) {
+        $info = Get-ModNameAndClassRoots $JarPath
+        if (-not $modId) { $modId = $info.ModId }
     }
 
     return [pscustomobject]@{
-        Path=$JarPath; Exists=$true; Suspected=($score -ge 3); Score=$score
+        Path=$JarPath; Exists=$true; Suspected=($score -ge 2); Score=$score
         Reasons=@($reasons | Select-Object -Unique); Evidence=@($evidence | Select-Object -Unique)
         SHA1=$sha1; ModId=$modId; Version=$info.Version; Name=$info.Name
-        LastWriteUtc=$item.LastWriteTimeUtc; CreationTimeUtc=$item.CreationTimeUtc; Size=$item.Length; UsnFound=$usnFound
+        LastWriteUtc=$item.LastWriteTimeUtc; CreationTimeUtc=$item.CreationTimeUtc; Size=$item.Length; UsnFound=$usnFound; UsnScore=$usnScore
     }
 }
 
-# ── Live Classpath Mods ───────────────────────────────────────────
+# -- Live Classpath Mods ----------------------------------------------
 function Get-LiveClasspathMods {
     $procs         = Get-MinecraftJavaProcesses
     $classpathJars = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -1393,7 +1320,7 @@ function Get-MissingModsLive([string]$ModsPath, [System.IO.FileInfo[]]$CurrentJa
     return @($result)
 }
 
-# ── Log Fallback ────────────────────────────────────────────────────
+# -- Log Fallback -----------------------------------------------------
 function Find-LogFile([string]$ModsPath) {
     $candidates = [System.Collections.Generic.List[string]]::new()
     $current = $ModsPath
@@ -1459,7 +1386,7 @@ function Get-MissingModsFromLog([string]$ModsPath, [System.IO.FileInfo[]]$Curren
     return @($result)
 }
 
-# ── Box Drawing ───────────────────────────────────────────────────
+# -- Box Drawing ------------------------------------------------------
 $BoxW = 72
 function Box-Top($title,$color) {
     $pad = [Math]::Max(0, $BoxW - $title.Length - 1)
@@ -1477,7 +1404,7 @@ function Truncate([string]$s,[int]$max) {
     return $s
 }
 
-# ── Entry Point ───────────────────────────────────────────────────
+# -- Entry Point ------------------------------------------------------
 Write-Host "   Fetching Feather official mod list from Modrinth..." -ForegroundColor Cyan
 Initialize-FeatherWhitelist
 Write-Host ""
@@ -1497,14 +1424,17 @@ $mcRunning   = $mcLaunchUtc -ne $null
 if ($mcRunning) { Write-Host ("   Minecraft launch time: {0}" -f $mcLaunchUtc.ToString("u")) -ForegroundColor Cyan }
 else            { Write-Host "   No live Minecraft process detected" -ForegroundColor DarkYellow }
 
-if (-not (Test-IsAdmin)) { Write-Host "   [Note] Not running as admin — USN checks disabled" -ForegroundColor DarkYellow }
+if (-not (Test-IsAdmin)) { Write-Host "   [Note] Not running as admin -- USN checks disabled" -ForegroundColor DarkYellow }
 Write-Host ""
 
-# ── USN Journal Pre-Scan ──────────────────────────────────────────
+$currentJarNameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($jar in $jars) { [void]$currentJarNameSet.Add($jar.Name) }
+
+# -- USN Journal Pre-Scan ---------------------------------------------
 $Script:UsnEvidence = $null
 if (Test-IsAdmin) {
     Write-Host "   Reading USN journal for replacement & missing mod detection..." -ForegroundColor Cyan
-    $Script:UsnEvidence = Get-UsnReplacementEvidence -ModsPath $path -MinecraftLaunchUtc $mcLaunchUtc
+    $Script:UsnEvidence = Get-UsnReplacementEvidence -ModsPath $path -MinecraftLaunchUtc $mcLaunchUtc -CurrentJarNames $currentJarNameSet
     if ($Script:UsnEvidence.Count -gt 0) {
         Write-Host "   USN journal: $($Script:UsnEvidence.Count) .jar file(s) with replacement activity" -ForegroundColor DarkGray
     } else {
@@ -1515,8 +1445,8 @@ if (Test-IsAdmin) {
 }
 Write-Host ""
 
-# ── Pass 0: Feather + Missing Mods ──────────────────────────────────
-Write-Host "   Pass 0 — Feather check & missing-mod detection..." -ForegroundColor Cyan
+# -- Pass 0: Feather + Missing Mods -----------------------------------
+Write-Host "   Pass 0 -- Feather check & missing-mod detection..." -ForegroundColor Cyan
 $featherOfficial = [System.Collections.Generic.List[object]]::new()
 $toProcess       = [System.Collections.Generic.List[object]]::new()
 $spinner = @("|","/","-","\"); $idx = 0
@@ -1524,8 +1454,11 @@ $spinner = @("|","/","-","\"); $idx = 0
 foreach ($jar in $jars) {
     Write-Host "`r   $($spinner[$idx++ % 4])  Reading metadata: $($jar.Name)$((' ' * 40))" -ForegroundColor DarkGray -NoNewline
     $modId = Get-ModId $jar.FullName
-    if ($modId -and (Test-FeatherOfficial $modId)) { [void]$featherOfficial.Add([PSCustomObject]@{ Jar=$jar; ModId=$modId }) }
-    else                                           { [void]$toProcess.Add($jar) }
+    if ($modId -and (Test-FeatherOfficial $modId)) {
+        [void]$featherOfficial.Add([PSCustomObject]@{ Jar=$jar; ModId=$modId })
+    } else {
+        [void]$toProcess.Add([PSCustomObject]@{ Jar=$jar; ModId=$modId })
+    }
 }
 Write-Host "`r$(' ' * 90)`r   $($featherOfficial.Count) Feather official, $($toProcess.Count) require further checks" -ForegroundColor Green
 
@@ -1565,58 +1498,63 @@ if ($Script:UsnEvidence) {
 }
 Write-Host ""
 
-# ── Pass 1: Modrinth SHA1 ─────────────────────────────────────────
-Write-Host "   Pass 1 — Verifying against Modrinth SHA1 database..." -ForegroundColor Cyan
+# -- Pass 1: Modrinth SHA1 --------------------------------------------
+Write-Host "   Pass 1 -- Verifying against Modrinth SHA1 database..." -ForegroundColor Cyan
 $verified = [System.Collections.Generic.List[object]]::new()
 $unknown  = [System.Collections.Generic.List[object]]::new()
 $idx = 0
 
-foreach ($jar in $toProcess) {
+foreach ($entry in $toProcess) {
+    $jar = $entry.Jar
     Write-Host "`r   $($spinner[$idx++ % 4])  Checking: $($jar.Name)$((' ' * 40))" -ForegroundColor DarkGray -NoNewline
     $sha1     = Get-FileSHA1 $jar.FullName
     $modrinth = if ($sha1) { Query-Modrinth $sha1 } else { @{ Found=$false } }
-    if ($modrinth.Found) { [void]$verified.Add([PSCustomObject]@{ Jar=$jar; Modrinth=$modrinth; SHA1=$sha1 }) }
-    else                 { [void]$unknown.Add([PSCustomObject]@{ Jar=$jar; SHA1=$sha1; Scan=$null; Manifest=$null; Replace=$null }) }
+    if ($modrinth.Found) { [void]$verified.Add([PSCustomObject]@{ Jar=$jar; ModId=$entry.ModId; Modrinth=$modrinth; SHA1=$sha1 }) }
+    else                 { [void]$unknown.Add([PSCustomObject]@{ Jar=$jar; ModId=$entry.ModId; SHA1=$sha1; Scan=$null; Manifest=$null; Replace=$null }) }
 }
 Write-Host "`r$(' ' * 90)`r   $($verified.Count) verified on Modrinth, $($unknown.Count) unrecognised" -ForegroundColor Green
 
-# ── Pass 2: Replacement Evidence ──────────────────────────────────
-Write-Host "   Pass 2 — Replacement evidence scan (ALL mods)..." -ForegroundColor Cyan
+# -- Pass 2: Replacement Evidence -------------------------------------
+Write-Host "   Pass 2 -- Replacement evidence scan (ALL mods)..." -ForegroundColor Cyan
 $replacementSuspects = [System.Collections.Generic.List[object]]::new()
 $replacementClean    = [System.Collections.Generic.List[object]]::new()
+$usnActivityOnly     = [System.Collections.Generic.List[object]]::new()
 $idx = 0
 
 foreach ($entry in $featherOfficial) {
     $jar = $entry.Jar
     Write-Host "`r   $($spinner[$idx++ % 4])  Replacement scan: $($jar.Name)$((' ' * 34))" -ForegroundColor DarkGray -NoNewline
-    $replace = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence
+    $replace = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence -JarInfo $jar -PrecomputedModId $entry.ModId
     $entry | Add-Member -NotePropertyName Replace -NotePropertyValue $replace -Force
     if ($replace.Suspected) { [void]$replacementSuspects.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$null; Category="Feather Official" }) }
+    elseif ($replace.UsnFound) { [void]$usnActivityOnly.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$null; Category="Feather Official" }) }
     else                    { [void]$replacementClean.Add($entry) }
 }
 
 foreach ($entry in $verified) {
     $jar = $entry.Jar
     Write-Host "`r   $($spinner[$idx++ % 4])  Replacement scan: $($jar.Name)$((' ' * 34))" -ForegroundColor DarkGray -NoNewline
-    $replace = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence
+    $replace = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence -JarInfo $jar -PrecomputedSha1 $entry.SHA1 -PrecomputedModId $entry.ModId
     $entry | Add-Member -NotePropertyName Replace -NotePropertyValue $replace -Force
     if ($replace.Suspected) { [void]$replacementSuspects.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$entry.SHA1; Category="Verified on Modrinth" }) }
+    elseif ($replace.UsnFound) { [void]$usnActivityOnly.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$entry.SHA1; Category="Verified on Modrinth" }) }
     else                    { [void]$replacementClean.Add($entry) }
 }
 
 foreach ($entry in $unknown) {
     $jar = $entry.Jar
     Write-Host "`r   $($spinner[$idx++ % 4])  Replacement scan: $($jar.Name)$((' ' * 34))" -ForegroundColor DarkGray -NoNewline
-    $replace       = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence
+    $replace       = Get-ModReplacementAudit -JarPath $jar.FullName -MinecraftLaunchUtc $mcLaunchUtc -UsnEvidence $Script:UsnEvidence -JarInfo $jar -PrecomputedSha1 $entry.SHA1 -PrecomputedModId $entry.ModId
     $entry.Replace = $replace
     if ($replace.Suspected) { [void]$replacementSuspects.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$entry.SHA1; Category="Unknown" }) }
+    elseif ($replace.UsnFound) { [void]$usnActivityOnly.Add([PSCustomObject]@{ Jar=$jar; Replace=$replace; SHA1=$entry.SHA1; Category="Unknown" }) }
     else                    { [void]$replacementClean.Add($entry) }
 }
-Write-Host "`r$(' ' * 90)`r   Replacement scan complete. $($replacementSuspects.Count) suspect(s)." -ForegroundColor Green
+Write-Host "`r$(' ' * 90)`r   Replacement scan complete. $($replacementSuspects.Count) suspect(s), $($usnActivityOnly.Count) with USN activity." -ForegroundColor Green
 Write-Host ""
 
-# ── Pass 3: Deep Scan ─────────────────────────────────────────────
-Write-Host "   Pass 3 — Deep scan: manifest, obfuscation, cheat indicators..." -ForegroundColor Cyan
+# -- Pass 3: Deep Scan ------------------------------------------------
+Write-Host "   Pass 3 -- Deep scan: manifest, obfuscation, cheat indicators..." -ForegroundColor Cyan
 $flagged      = [System.Collections.Generic.List[object]]::new()
 $unknownClean = [System.Collections.Generic.List[object]]::new()
 $idx = 0
@@ -1646,7 +1584,7 @@ foreach ($entry in $unknown) {
 Write-Host "`r$(' ' * 90)`r   Deep scan complete. $($flagged.Count) flagged." -ForegroundColor Green
 Write-Host ""
 
-# ── Output ──────────────────────────────────────────────────────────
+# -- Output -----------------------------------------------------------
 Box-Top "FEATHER OFFICIAL  ($($featherOfficial.Count))" Blue
 if ($featherOfficial.Count -eq 0) { Box-Line "(none)" DarkGray }
 else {
@@ -1691,6 +1629,30 @@ else {
 Box-Bot Green
 Write-Host ""
 
+# NEW: USN Activity section -- shows files with journal hits even if they didn't meet suspect threshold
+Box-Top "USN JOURNAL ACTIVITY  ($($usnActivityOnly.Count))" Cyan
+if ($usnActivityOnly.Count -eq 0) { Box-Line "No additional USN activity beyond suspects." DarkGray }
+else {
+    for ($ui = 0; $ui -lt $usnActivityOnly.Count; $ui++) {
+        $u   = $usnActivityOnly[$ui]
+        $jar = $u.Jar; $rep = $u.Replace
+        Box-Line "~ [$($u.Category)] $($jar.Name)" White
+        $fp = $jar.FullName; if ($fp.Length -gt $BoxW - 8) { $fp = "..." + $fp.Substring($fp.Length - ($BoxW - 11)) }
+        Box-Line "  Path: $fp" DarkGray
+        Box-Line "  USN Score: $($rep.UsnScore) (below suspect threshold of 2)" DarkCyan
+        if ($rep.ModId)   { Box-Line "  ModId: $($rep.ModId)" DarkGray }
+        if ($rep.Name)    { Box-Line "  Name : $($rep.Name)" DarkGray }
+        if ($rep.Version) { Box-Line "  Ver  : $($rep.Version)" DarkGray }
+        if ($rep.LastWriteUtc)    { Box-Line "  LastWrite : $($rep.LastWriteUtc.ToString('MM/dd HH:mm:ss')) UTC" DarkGray }
+        if ($rep.CreationTimeUtc) { Box-Line "  Created   : $($rep.CreationTimeUtc.ToString('MM/dd HH:mm:ss')) UTC" DarkGray }
+        foreach ($reason in $rep.Reasons) { Box-Line (Truncate "  - $reason" $BoxW) Yellow }
+        if ($rep.Evidence.Count -gt 0) { foreach ($ev in $rep.Evidence) { Box-Line (Truncate "  > $ev" $BoxW) DarkCyan } }
+        if ($ui -lt $usnActivityOnly.Count - 1) { Box-Sep Cyan }
+    }
+}
+Box-Bot Cyan
+Write-Host ""
+
 Box-Top "REPLACEMENT SUSPECTS  ($($replacementSuspects.Count))" Magenta
 if ($replacementSuspects.Count -eq 0) { Box-Line "None detected." DarkGray }
 else {
@@ -1716,7 +1678,7 @@ Box-Bot Magenta
 Write-Host ""
 
 if ($unknownClean.Count -gt 0) {
-    Box-Top "UNKNOWN — CLEAN SCAN  ($($unknownClean.Count))" Yellow
+    Box-Top "UNKNOWN -- CLEAN SCAN  ($($unknownClean.Count))" Yellow
     $ucList = @($unknownClean)
     for ($ui = 0; $ui -lt $ucList.Count; $ui++) {
         $u = $ucList[$ui]; $jar = $u.Jar
@@ -1753,7 +1715,7 @@ else {
         Box-Line "! $($jar.Name)" White
         $fp = $jar.FullName; if ($fp.Length -gt $BoxW - 8) { $fp = "..." + $fp.Substring($fp.Length - ($BoxW - 11)) }
         Box-Line "  Path: $fp" DarkGray
-        Box-Line "  Status: NOT on Modrinth — unknown origin" Magenta
+        Box-Line "  Status: NOT on Modrinth -- unknown origin" Magenta
         Box-Sep Red
 
         $sources = Get-DownloadSource $jar.FullName
@@ -1880,8 +1842,9 @@ if ($missingMods.Count -gt 0) {
     else                                 { Box-Line "0  Missing mods  (none detected)" Yellow }
 }
 Box-Line "$($verified.Count)  Verified on Modrinth  (SHA1 match)" Green
+Box-Line "$($usnActivityOnly.Count)  USN journal activity  (below suspect threshold)" Cyan   # NEW
 Box-Line "$($replacementSuspects.Count)  Replacement suspects  (USN journal + timestamp)" Magenta
-Box-Line "$($unknownClean.Count)  Unknown — passed deep scan" Yellow
+Box-Line "$($unknownClean.Count)  Unknown -- passed deep scan" Yellow
 Box-Line "$($flagged.Count)  Flagged  (cheat / malware indicators)" Red
 Box-Sep White
 Box-Line "MANUAL VERIFICATION IS ALWAYS RECOMMENDED" Red
