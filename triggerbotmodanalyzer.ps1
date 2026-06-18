@@ -1386,6 +1386,79 @@ function Get-MissingModsFromLog([string]$ModsPath, [System.IO.FileInfo[]]$Curren
     return @($result)
 }
 
+# -- JVM Injected Mod Detection ---------------------------------------
+function Get-JvmInjectedMods {
+    param([string]$ModsPath = "")
+
+    $procs     = Get-MinecraftJavaProcesses
+    $injected  = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $seenPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+    # JVM args / system properties that can inject external JARs at runtime
+    $argPatterns = [ordered]@{
+        '(?:^|\s)-Dfabric\.addMods=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'              = "-Dfabric.addMods"
+        '(?:^|\s)-Dfabric\.addMods\.extra=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'       = "-Dfabric.addMods.extra"
+        '(?:^|\s)-Dloader\.addMods=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'              = "-Dloader.addMods (Quilt)"
+        '(?:^|\s)-Dloader\.addMods\.extra=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'       = "-Dloader.addMods.extra (Quilt)"
+        '(?:^|\s)-Dfabric\.extraMods=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'            = "-Dfabric.extraMods"
+        '(?:^|\s)-javaagent:(?:["'']?)([^="''\s]+\.jar)(?:=[^"''\s]*)?'                  = "-javaagent"
+        '(?:^|\s)-Xbootclasspath/[ap]:(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'             = "-Xbootclasspath"
+        '(?:^|\s)-DlegacyClassPath=(?:["'']?)([^"''\s;]+(?:;[^"''\s;]+)*)'               = "-DlegacyClassPath"
+    }
+
+    $modsResolved = ""
+    if (-not [string]::IsNullOrWhiteSpace($ModsPath)) {
+        try { $modsResolved = (Resolve-Path $ModsPath -ErrorAction Stop).Path } catch {}
+    }
+
+    foreach ($proc in $procs) {
+        $cmd = $proc.CommandLine
+        if ([string]::IsNullOrWhiteSpace($cmd)) { continue }
+
+        foreach ($pattern in $argPatterns.Keys) {
+            $rxMatches = [regex]::Matches($cmd, $pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            foreach ($m in $rxMatches) {
+                $rawValue = $m.Groups[1].Value.Trim('"').Trim("'").Trim()
+                if ([string]::IsNullOrWhiteSpace($rawValue)) { continue }
+
+                # Support semicolon-separated path lists (e.g. -Dfabric.addMods=a.jar;b.jar)
+                $paths = $rawValue -split ';' | ForEach-Object { $_.Trim().Trim('"') } | Where-Object { $_ -ne "" }
+
+                foreach ($jarPath in $paths) {
+                    if ($jarPath -notlike "*.jar") { continue }
+                    if (-not $seenPaths.Add($jarPath)) { continue }
+
+                    $exists   = Test-Path $jarPath -ErrorAction SilentlyContinue
+                    $sha1     = if ($exists) { Get-FileSHA1 $jarPath } else { $null }
+                    $jarName  = [System.IO.Path]::GetFileName($jarPath)
+                    $inFolder = $false
+
+                    if ($modsResolved -and $exists) {
+                        try {
+                            $res    = (Resolve-Path $jarPath -ErrorAction SilentlyContinue).Path
+                            $prefix = $modsResolved; if (-not $prefix.EndsWith('\')) { $prefix += '\' }
+                            if ($res) { $inFolder = $res.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase) }
+                        } catch {}
+                    }
+
+                    [void]$injected.Add([PSCustomObject]@{
+                        JarPath      = $jarPath
+                        JarName      = $jarName
+                        ArgType      = $argPatterns[$pattern]
+                        Exists       = $exists
+                        SHA1         = $sha1
+                        ProcessId    = $proc.ProcessId
+                        LauncherHint = $proc.LauncherHint
+                        InModsFolder = $inFolder
+                    })
+                }
+            }
+        }
+    }
+
+    return @($injected)
+}
+
 # -- Box Drawing ------------------------------------------------------
 $BoxW = 72
 function Box-Top($title,$color) {
@@ -1425,6 +1498,16 @@ if ($mcRunning) { Write-Host ("   Minecraft launch time: {0}" -f $mcLaunchUtc.To
 else            { Write-Host "   No live Minecraft process detected" -ForegroundColor DarkYellow }
 
 if (-not (Test-IsAdmin)) { Write-Host "   [Note] Not running as admin -- USN checks disabled" -ForegroundColor DarkYellow }
+Write-Host ""
+
+# -- Live JVM Argument Injection Check --------------------------------
+Write-Host "   Checking live JVM for argument-injected mods..." -ForegroundColor Cyan
+$jvmInjected = Get-JvmInjectedMods -ModsPath $path
+if ($jvmInjected.Count -gt 0) {
+    Write-Host "   [WARNING] $($jvmInjected.Count) injected JAR reference(s) found in live JVM!" -ForegroundColor Red
+} else {
+    Write-Host "   No JVM argument injection detected" -ForegroundColor DarkGray
+}
 Write-Host ""
 
 $currentJarNameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -1613,6 +1696,28 @@ if ($missingMods.Count -eq 0) {
     }
 }
 Box-Bot Yellow
+Write-Host ""
+
+Box-Top "LIVE JVM ARGUMENT INJECTION  ($($jvmInjected.Count))" Red
+if ($jvmInjected.Count -eq 0) { Box-Line "None detected." DarkGray }
+else {
+    for ($ji = 0; $ji -lt $jvmInjected.Count; $ji++) {
+        $inj = $jvmInjected[$ji]
+        Box-Line "! $($inj.JarName)" White
+        Box-Line "  Arg: $($inj.ArgType)" Yellow
+        $truncPath = $inj.JarPath
+        if ($truncPath.Length -gt $BoxW - 8) { $truncPath = "..." + $truncPath.Substring($truncPath.Length - ($BoxW - 11)) }
+        Box-Line "  Path: $truncPath" DarkGray
+        if ($inj.Exists) { Box-Line "  Status: EXISTS on disk" Green }
+        else { Box-Line "  Status: NOT FOUND on disk" Red }
+        if ($inj.InModsFolder) { Box-Line "  Location: Inside mods folder" Green }
+        else { Box-Line "  Location: OUTSIDE mods folder" Magenta }
+        Box-Line "  PID: $($inj.ProcessId)  |  Launcher: $($inj.LauncherHint)" DarkGray
+        if ($inj.SHA1) { Box-Line "  SHA1: $($inj.SHA1)" DarkGray }
+        if ($ji -lt $jvmInjected.Count - 1) { Box-Sep Red }
+    }
+}
+Box-Bot Red
 Write-Host ""
 
 Box-Top "VERIFIED ON MODRINTH  ($($verified.Count))" Green
@@ -1842,6 +1947,7 @@ if ($missingMods.Count -gt 0) {
     else                                 { Box-Line "0  Missing mods  (none detected)" Yellow }
 }
 Box-Line "$($verified.Count)  Verified on Modrinth  (SHA1 match)" Green
+Box-Line "$($jvmInjected.Count)  Live JVM argument injection(s)" Red
 Box-Line "$($usnActivityOnly.Count)  USN journal activity  (below suspect threshold)" Cyan   # NEW
 Box-Line "$($replacementSuspects.Count)  Replacement suspects  (USN journal + timestamp)" Magenta
 Box-Line "$($unknownClean.Count)  Unknown -- passed deep scan" Yellow
